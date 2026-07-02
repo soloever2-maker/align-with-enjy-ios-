@@ -1,0 +1,66 @@
+# Codemagic build config — builds the iOS app in the cloud (no Mac needed)
+# Docs: https://docs.codemagic.io/yaml-quick-start/building-a-capacitor-app/
+#
+# BEFORE FIRST BUILD — one-time setup in the Codemagic dashboard:
+# 1. Connect this GitHub repo to Codemagic.
+# 2. Teams > Integrations > Developer Portal: connect your Apple Developer
+#    account with an App Store Connect API key (Codemagic then handles
+#    certificates & provisioning profiles automatically).
+# 3. In Apple Developer portal: create App ID `com.alignwithenjy.app`
+#    with the Push Notifications capability enabled.
+# 4. In App Store Connect: create the app (same bundle ID).
+
+workflows:
+  ios-appstore:
+    name: Align with Enjy — iOS App Store
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+
+    integrations:
+      app_store_connect: enjy_api_key   # the name you give the API key in Codemagic
+
+    environment:
+      groups:
+        - appstore_credentials
+      vars:
+        BUNDLE_ID: "com.alignwithenjy.app"
+        XCODE_SCHEME: "App"
+      node: 20
+      xcode: latest
+      cocoapods: default
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.alignwithenjy.app
+
+    scripts:
+      - name: Install npm dependencies
+        script: npm ci || npm install
+
+      - name: Capacitor sync
+        script: npx cap sync ios
+
+      - name: Install CocoaPods dependencies
+        script: cd ios/App && pod install
+
+      - name: Set up code signing
+        script: xcode-project use-profiles
+
+      - name: Increment build number
+        script: |
+          cd ios/App
+          agvtool new-version -all $(($(app-store-connect get-latest-app-store-build-number "$APP_APPLE_ID" 2>/dev/null || echo 0) + 1))
+
+      - name: Build IPA
+        script: |
+          xcode-project build-ipa \
+            --workspace ios/App/App.xcworkspace \
+            --scheme "$XCODE_SCHEME"
+
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true

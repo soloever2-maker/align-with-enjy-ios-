@@ -1,0 +1,39 @@
+{
+	"appId": "com.alignwithenjy.app",
+	"appName": "Align with Enjy",
+	"webDir": "www",
+	"server": {
+		"url": "https://wellness-hub-ten.vercel.app",
+		"allowNavigation": [
+			"wellness-hub-ten.vercel.app",
+			"*.supabase.co"
+		]
+	},
+	"ios": {
+		"contentInset": "automatic",
+		"backgroundColor": "#F5F1E6"
+	},
+	"plugins": {
+		"SplashScreen": {
+			"launchShowDuration": 1200,
+			"launchAutoHide": true,
+			"backgroundColor": "#F5F1E6",
+			"showSpinner": false
+		},
+		"PushNotifications": {
+			"presentationOptions": [
+				"badge",
+				"sound",
+				"alert"
+			]
+		}
+	},
+	"packageClassList": [
+		"AppPlugin",
+		"GeolocationPlugin",
+		"HapticsPlugin",
+		"PushNotificationsPlugin",
+		"SplashScreenPlugin",
+		"StatusBarPlugin"
+	]
+}
