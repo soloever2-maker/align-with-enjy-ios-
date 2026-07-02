@@ -46,4 +46,18 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         return ApplicationDelegateProxy.shared.application(application, continue: userActivity, restorationHandler: restorationHandler)
     }
 
+    // ── Push Notifications (APNs) ──────────────────────────────
+    // REQUIRED for @capacitor/push-notifications: these two hooks forward
+    // the APNs device token (or failure) to the Capacitor plugin. Without
+    // them, PushNotifications.register() never fires the 'registration'
+    // event in the web app.
+
+    func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
+        NotificationCenter.default.post(name: .capacitorDidRegisterForRemoteNotifications, object: deviceToken)
+    }
+
+    func application(_ application: UIApplication, didFailToRegisterForRemoteNotificationsWithError error: Error) {
+        NotificationCenter.default.post(name: .capacitorDidFailToRegisterForRemoteNotifications, object: error)
+    }
+
 }
