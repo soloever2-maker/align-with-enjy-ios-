@@ -17,7 +17,7 @@ workflows:
     instance_type: mac_mini_m2
 
     integrations:
-      app_store_connect: enjy_api_key   # the name you give the API key in Codemagic
+      app_store_connect: Codemagic API Key   # the name you give the API key in Codemagic
 
     environment:
       groups:
