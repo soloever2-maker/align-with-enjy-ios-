@@ -20,8 +20,6 @@ workflows:
       app_store_connect: "Codemagic API Key"
 
     environment:
-      groups:
-        - appstore_credentials
       vars:
         BUNDLE_ID: "com.alignwithenjy.app"
         XCODE_SCHEME: "App"
