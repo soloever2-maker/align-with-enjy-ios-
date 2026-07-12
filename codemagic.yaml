@@ -20,7 +20,7 @@ workflows:
       vars:
         BUNDLE_ID: "com.alignwithenjy.app"
         XCODE_SCHEME: "App"
-      node: 20
+      node: 22
       xcode: latest
       cocoapods: default
     scripts:
