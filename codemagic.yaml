@@ -12,6 +12,7 @@ workflows:
       vars:
         BUNDLE_ID: "com.alignwithenjy.app"
         XCODE_SCHEME: "App"
+        APP_APPLE_ID: "6789882055"
       node: 22
       xcode: latest
     scripts:
