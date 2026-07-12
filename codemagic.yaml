@@ -9,16 +9,13 @@
 # 3. In Apple Developer portal: create App ID `com.alignwithenjy.app`
 #    with the Push Notifications capability enabled.
 # 4. In App Store Connect: create the app (same bundle ID).
-
 workflows:
   ios-appstore:
     name: Align with Enjy — iOS App Store
     max_build_duration: 60
     instance_type: mac_mini_m2
-
     integrations:
       app_store_connect: "Codemagic API Key"
-
     environment:
       vars:
         BUNDLE_ID: "com.alignwithenjy.app"
@@ -26,38 +23,36 @@ workflows:
       node: 20
       xcode: latest
       cocoapods: default
-      ios_signing:
-        distribution_type: app_store
-        bundle_identifier: com.alignwithenjy.app
-
     scripts:
       - name: Install npm dependencies
         script: npm ci || npm install
-
       - name: Capacitor sync
         script: npx cap sync ios
-
       - name: Install CocoaPods dependencies
         script: cd ios/App && pod install
-
+      - name: Initialize keychain
+        script: keychain initialize
+      - name: Fetch signing files
+        script: |
+          app-store-connect fetch-signing-files "com.alignwithenjy.app" \
+            --type IOS_APP_STORE \
+            --create
+      - name: Add certificates to keychain
+        script: keychain add-certificates
       - name: Set up code signing
         script: xcode-project use-profiles
-
       - name: Increment build number
         script: |
           cd ios/App
           agvtool new-version -all $(($(app-store-connect get-latest-app-store-build-number "$APP_APPLE_ID" 2>/dev/null || echo 0) + 1))
-
       - name: Build IPA
         script: |
           xcode-project build-ipa \
             --workspace ios/App/App.xcworkspace \
             --scheme "$XCODE_SCHEME"
-
     artifacts:
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
-
     publishing:
       app_store_connect:
         auth: integration
