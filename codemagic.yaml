@@ -1,14 +1,4 @@
 # Codemagic build config — builds the iOS app in the cloud (no Mac needed)
-# Docs: https://docs.codemagic.io/yaml-quick-start/building-a-capacitor-app/
-#
-# BEFORE FIRST BUILD — one-time setup in the Codemagic dashboard:
-# 1. Connect this GitHub repo to Codemagic.
-# 2. Teams > Integrations > Developer Portal: connect your Apple Developer
-#    account with an App Store Connect API key (Codemagic then handles
-#    certificates & provisioning profiles automatically).
-# 3. In Apple Developer portal: create App ID `com.alignwithenjy.app`
-#    with the Push Notifications capability enabled.
-# 4. In App Store Connect: create the app (same bundle ID).
 workflows:
   ios-appstore:
     name: Align with Enjy — iOS App Store
@@ -17,6 +7,8 @@ workflows:
     integrations:
       app_store_connect: "Codemagic API Key"
     environment:
+      groups:
+        - ios_signing_credentials
       vars:
         BUNDLE_ID: "com.alignwithenjy.app"
         XCODE_SCHEME: "App"
