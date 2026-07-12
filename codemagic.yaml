@@ -22,14 +22,11 @@ workflows:
         XCODE_SCHEME: "App"
       node: 22
       xcode: latest
-      cocoapods: default
     scripts:
       - name: Install npm dependencies
         script: npm ci || npm install
       - name: Capacitor sync
         script: npx cap sync ios
-      - name: Install CocoaPods dependencies
-        script: cd ios/App && pod install
       - name: Initialize keychain
         script: keychain initialize
       - name: Fetch signing files
