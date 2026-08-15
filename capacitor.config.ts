@@ -6,15 +6,21 @@ const config: CapacitorConfig = {
   webDir: 'www',
 
   // The native shell loads the live app straight from Vercel,
-  // so every web deploy updates the iOS app instantly — no resubmission.
+  // so every web deploy updates both iOS and Android instantly — no resubmission.
   server: {
     url: 'https://wellness-hub-ten.vercel.app',
     allowNavigation: ['wellness-hub-ten.vercel.app', '*.supabase.co'],
+    androidScheme: 'https',  // required for Android cleartext policy
   },
 
   ios: {
     contentInset: 'automatic',
     backgroundColor: '#F5F1E6',
+  },
+
+  android: {
+    backgroundColor: '#F5F1E6',
+    allowMixedContent: false, // enforce HTTPS only
   },
 
   plugins: {
