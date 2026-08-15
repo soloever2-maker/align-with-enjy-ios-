@@ -115,8 +115,10 @@ workflows:
       - android/app/build/outputs/bundle/release/app-release.aab
       - android/app/build/outputs/apk/release/app-release.apk
 
-    publishing:
-      google_play:
-        credentials: $GCLOUD_SERVICE_ACCOUNT_CREDENTIALS
-        track: internal       # Internal Testing أول ما ينزل
-        submit_as_draft: true # Draft — مش هينشر لوحده
+    # Publishing disabled for now — Play Console account still under review.
+    # We'll upload the AAB manually first, then enable this later.
+    # publishing:
+    #   google_play:
+    #     credentials: $GCLOUD_SERVICE_ACCOUNT_CREDENTIALS
+    #     track: internal
+    #     submit_as_draft: true
