@@ -73,11 +73,7 @@ workflows:
       java: 17
     scripts:
       - name: Install npm dependencies
-        script: npm ci || npm install
-
-      - name: Remove push-notifications plugin (no Firebase on Android)
-        script: |
-          npm uninstall @capacitor/push-notifications --no-save 2>/dev/null || true
+        script: npm install
 
       - name: Add Android platform (first time only)
         script: |
@@ -87,6 +83,11 @@ workflows:
           else
             echo "android/ already exists — skipping cap add"
           fi
+
+      - name: Remove push-notifications from Android (avoids Firebase requirement)
+        script: |
+          # iOS keeps push; Android drops it so no google-services.json is needed
+          npm uninstall @capacitor/push-notifications 2>/dev/null || true
 
       - name: Capacitor sync
         script: npx cap sync android
