@@ -1,17 +1,19 @@
 {
   "name": "align-with-enjy-ios",
   "version": "1.0.0",
-  "description": "iOS native shell for the Align with Enjy PWA",
+  "description": "Native shell for the Align with Enjy PWA (iOS + Android)",
   "main": "index.js",
   "scripts": {
-    "sync": "cap sync ios",
-    "open": "cap open ios"
+    "sync": "cap sync",
+    "open:ios": "cap open ios",
+    "open:android": "cap open android"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "@capacitor/app": "^8.1.0",
+    "@capacitor/android": "^8.4.1",
     "@capacitor/cli": "^8.4.1",
     "@capacitor/core": "^8.4.1",
     "@capacitor/geolocation": "^8.2.0",
