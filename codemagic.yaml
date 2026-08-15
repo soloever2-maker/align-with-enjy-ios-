@@ -63,7 +63,7 @@ workflows:
   android-playstore:
     name: Align with Enjy — Android Play Store
     max_build_duration: 60
-    instance_type: linux
+    instance_type: mac_mini_m2
     environment:
       groups:
         - android_signing   # CM_KEYSTORE, CM_KEYSTORE_PASSWORD, CM_KEY_ALIAS, CM_KEY_PASSWORD
@@ -104,6 +104,7 @@ workflows:
       - name: Build Android AAB (release)
         script: |
           cd android
+          chmod +x ./gradlew
           ./gradlew bundleRelease \
             -Pandroid.injected.signing.store.file=$CM_BUILD_DIR/keystore.jks \
             -Pandroid.injected.signing.store.password=$CM_KEYSTORE_PASSWORD \
