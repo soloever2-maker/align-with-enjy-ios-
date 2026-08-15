@@ -1,5 +1,10 @@
-# Codemagic build config — builds the iOS app in the cloud (no Mac needed)
+# Codemagic build config — builds iOS and Android in the cloud (no Mac/PC needed)
+
 workflows:
+
+  # ──────────────────────────────────────────────
+  # iOS App Store (unchanged)
+  # ──────────────────────────────────────────────
   ios-appstore:
     name: Align with Enjy — iOS App Store
     max_build_duration: 60
@@ -18,25 +23,19 @@ workflows:
     scripts:
       - name: Install npm dependencies
         script: npm ci || npm install
-
       - name: Capacitor sync
         script: npx cap sync ios
-
       - name: Initialize keychain
         script: keychain initialize
-
       - name: Fetch signing files
         script: |
           app-store-connect fetch-signing-files "com.alignwithenjy.app" \
             --type IOS_APP_STORE \
             --create
-
       - name: Add certificates to keychain
         script: keychain add-certificates
-
       - name: Set up code signing
         script: xcode-project use-profiles
-
       - name: Increment build number
         script: |
           LATEST=$(app-store-connect get-latest-testflight-build-number "$APP_APPLE_ID" 2>/dev/null || echo 0)
@@ -45,18 +44,78 @@ workflows:
           echo "Latest TestFlight build: $LATEST → New build number: $BUILD_NUMBER"
           sed -i '' "s/CURRENT_PROJECT_VERSION = [0-9]*;/CURRENT_PROJECT_VERSION = $BUILD_NUMBER;/g" ios/App/App.xcodeproj/project.pbxproj
           grep "CURRENT_PROJECT_VERSION" ios/App/App.xcodeproj/project.pbxproj
-
       - name: Build IPA
         script: |
           xcode-project build-ipa \
             --project ios/App/App.xcodeproj \
             --scheme "$XCODE_SCHEME"
-
     artifacts:
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
-
     publishing:
       app_store_connect:
         auth: integration
         submit_to_testflight: true
+
+  # ──────────────────────────────────────────────
+  # Android Play Store (NEW)
+  # ──────────────────────────────────────────────
+  android-playstore:
+    name: Align with Enjy — Android Play Store
+    max_build_duration: 60
+    instance_type: linux_x2
+    environment:
+      groups:
+        - android_signing   # CM_KEYSTORE, CM_KEYSTORE_PASSWORD, CM_KEY_ALIAS, CM_KEY_PASSWORD
+      vars:
+        PACKAGE_NAME: "com.alignwithenjy.app"
+      node: 22
+      java: 17
+    scripts:
+      - name: Install npm dependencies
+        script: npm ci || npm install
+
+      - name: Remove push-notifications plugin (no Firebase on Android)
+        script: |
+          npm uninstall @capacitor/push-notifications --no-save 2>/dev/null || true
+
+      - name: Add Android platform (first time only)
+        script: |
+          if [ ! -d "android" ]; then
+            echo "android/ not found — running cap add android"
+            npx cap add android
+          else
+            echo "android/ already exists — skipping cap add"
+          fi
+
+      - name: Capacitor sync
+        script: npx cap sync android
+
+      - name: Decode keystore
+        script: |
+          echo "$CM_KEYSTORE" | base64 --decode > $CM_BUILD_DIR/keystore.jks
+
+      - name: Set version code from build number
+        script: |
+          BUILD_NUMBER=${BUILD_NUMBER:-1}
+          sed -i "s/versionCode .*/versionCode $BUILD_NUMBER/" android/app/build.gradle
+          echo "versionCode set to $BUILD_NUMBER"
+
+      - name: Build Android AAB (release)
+        script: |
+          cd android
+          ./gradlew bundleRelease \
+            -Pandroid.injected.signing.store.file=$CM_BUILD_DIR/keystore.jks \
+            -Pandroid.injected.signing.store.password=$CM_KEYSTORE_PASSWORD \
+            -Pandroid.injected.signing.key.alias=$CM_KEY_ALIAS \
+            -Pandroid.injected.signing.key.password=$CM_KEY_PASSWORD
+
+    artifacts:
+      - android/app/build/outputs/bundle/release/app-release.aab
+      - android/app/build/outputs/apk/release/app-release.apk
+
+    publishing:
+      google_play:
+        credentials: $GCLOUD_SERVICE_ACCOUNT_CREDENTIALS
+        track: internal       # Internal Testing أول ما ينزل
+        submit_as_draft: true # Draft — مش هينشر لوحده
