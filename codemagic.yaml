@@ -67,6 +67,7 @@ workflows:
     environment:
       groups:
         - android_signing   # CM_KEYSTORE, CM_KEYSTORE_PASSWORD, CM_KEY_ALIAS, CM_KEY_PASSWORD
+        - android_firebase  # GOOGLE_SERVICES_JSON (base64)
       vars:
         PACKAGE_NAME: "com.alignwithenjy.app"
       node: 22
@@ -84,13 +85,36 @@ workflows:
             echo "android/ already exists — skipping cap add"
           fi
 
-      - name: Remove push-notifications from Android (avoids Firebase requirement)
-        script: |
-          # iOS keeps push; Android drops it so no google-services.json is needed
-          npm uninstall @capacitor/push-notifications 2>/dev/null || true
-
       - name: Capacitor sync
         script: npx cap sync android
+
+      - name: Inject google-services.json (FCM / Push Notifications)
+        script: |
+          if [ -n "$GOOGLE_SERVICES_JSON" ]; then
+            echo "$GOOGLE_SERVICES_JSON" | base64 --decode > android/app/google-services.json
+            echo "google-services.json injected ✓"
+          else
+            echo "ERROR: GOOGLE_SERVICES_JSON not set — Android push will not build"
+            exit 1
+          fi
+
+      - name: Enable Google Services Gradle plugin
+        script: |
+          # Project-level build.gradle: add the classpath if missing
+          PROJ=android/build.gradle
+          if ! grep -q "com.google.gms:google-services" "$PROJ"; then
+            # Insert the classpath inside the buildscript { dependencies { } } block
+            sed -i "s#\(classpath 'com.android.tools.build:gradle.*\)#\1\n        classpath 'com.google.gms:google-services:4.4.2'#" "$PROJ"
+            echo "Added google-services classpath ✓"
+          fi
+
+          # App-level build.gradle: apply the plugin at the very top-level (end of file is fine)
+          APP=android/app/build.gradle
+          if ! grep -q "com.google.gms.google-services" "$APP"; then
+            echo "" >> "$APP"
+            echo "apply plugin: 'com.google.gms.google-services'" >> "$APP"
+            echo "Applied google-services plugin ✓"
+          fi
 
       - name: Decode keystore
         script: |
