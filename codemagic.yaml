@@ -68,6 +68,7 @@ workflows:
       groups:
         - android_signing   # CM_KEYSTORE, CM_KEYSTORE_PASSWORD, CM_KEY_ALIAS, CM_KEY_PASSWORD
         - android_firebase  # GOOGLE_SERVICES_JSON (base64)
+        - google_play       # GCLOUD_SERVICE_ACCOUNT_CREDENTIALS (service-account JSON)
       vars:
         PACKAGE_NAME: "com.alignwithenjy.app"
       node: 22
@@ -120,11 +121,24 @@ workflows:
         script: |
           echo "$CM_KEYSTORE" | base64 --decode > $CM_BUILD_DIR/keystore.jks
 
-      - name: Set version code from build number
+      - name: Set version code from Google Play (always correct)
         script: |
-          BUILD_NUMBER=${BUILD_NUMBER:-1}
-          sed -i "s/versionCode .*/versionCode $BUILD_NUMBER/" android/app/build.gradle
-          echo "versionCode set to $BUILD_NUMBER"
+          # Ask Google Play for the highest versionCode already uploaded across
+          # ALL tracks, then use +1. This is bulletproof: the versionCode can
+          # never collide, no matter how many builds ran before.
+          set -e
+          echo "$GCLOUD_SERVICE_ACCOUNT_CREDENTIALS" > /tmp/gcloud_sa.json
+          LATEST=$(google-play get-latest-build-number \
+            --package-name "$PACKAGE_NAME" \
+            --credentials @file:/tmp/gcloud_sa.json 2>/dev/null || echo "")
+          if [ -z "$LATEST" ]; then
+            echo "No existing build found on Play — starting from PROJECT_BUILD_NUMBER"
+            VC=${PROJECT_BUILD_NUMBER:-1}
+          else
+            VC=$((LATEST + 1))
+          fi
+          echo "versionCode → $VC"
+          sed -i "s/versionCode .*/versionCode $VC/" android/app/build.gradle
 
       - name: Build Android AAB (release)
         script: |
@@ -140,10 +154,8 @@ workflows:
       - android/app/build/outputs/bundle/release/app-release.aab
       - android/app/build/outputs/apk/release/app-release.apk
 
-    # Publishing disabled for now — Play Console account still under review.
-    # We'll upload the AAB manually first, then enable this later.
-    # publishing:
-    #   google_play:
-    #     credentials: $GCLOUD_SERVICE_ACCOUNT_CREDENTIALS
-    #     track: internal
-    #     submit_as_draft: true
+    publishing:
+      google_play:
+        credentials: $GCLOUD_SERVICE_ACCOUNT_CREDENTIALS
+        track: internal          # نشر تلقائي على Internal Testing
+        submit_as_draft: false   # ينزل مباشرة للمختبرين (مش draft)
