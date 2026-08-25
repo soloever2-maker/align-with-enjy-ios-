@@ -105,7 +105,7 @@ workflows:
           PROJ=android/build.gradle
           if ! grep -q "com.google.gms:google-services" "$PROJ"; then
             # Insert the classpath inside the buildscript { dependencies { } } block
-            sed -i "s#\(classpath 'com.android.tools.build:gradle.*\)#\1\n        classpath 'com.google.gms:google-services:4.4.2'#" "$PROJ"
+            sed -i '' "s#\(classpath 'com.android.tools.build:gradle.*\)#\1\n        classpath 'com.google.gms:google-services:4.4.2'#" "$PROJ"
             echo "Added google-services classpath ✓"
           fi
 
@@ -138,7 +138,7 @@ workflows:
             VC=$((LATEST + 1))
           fi
           echo "versionCode → $VC"
-          sed -i "s/versionCode .*/versionCode $VC/" android/app/build.gradle
+          sed -i '' "s/versionCode .*/versionCode $VC/" android/app/build.gradle
 
       - name: Build Android AAB (release)
         script: |
