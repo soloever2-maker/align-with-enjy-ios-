@@ -8,6 +8,8 @@
 	<string>Used only if you choose to take a photo for your profile picture.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Used only if you choose a photo from your library for your profile picture.</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>Use Face ID for a faster, more secure log in to Align with Enjy.</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>remote-notification</string>
