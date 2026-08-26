@@ -22,7 +22,7 @@ workflows:
       xcode: latest
     scripts:
       - name: Install npm dependencies
-        script: npm ci || npm install
+        script: npm install
       - name: Capacitor sync
         script: npx cap sync ios
       - name: Initialize keychain
@@ -88,6 +88,17 @@ workflows:
 
       - name: Capacitor sync
         script: npx cap sync android
+
+      - name: Add biometric permission to AndroidManifest
+        script: |
+          MANIFEST=android/app/src/main/AndroidManifest.xml
+          if ! grep -q "android.permission.USE_BIOMETRIC" "$MANIFEST"; then
+            # Insert the permission right after the opening <manifest ...> tag
+            sed -i '' 's#\(<manifest[^>]*>\)#\1\n    <uses-permission android:name="android.permission.USE_BIOMETRIC" />#' "$MANIFEST"
+            echo "USE_BIOMETRIC permission added ✓"
+          else
+            echo "USE_BIOMETRIC already present — skipping"
+          fi
 
       - name: Inject google-services.json (FCM / Push Notifications)
         script: |
