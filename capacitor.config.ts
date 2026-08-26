@@ -13,6 +13,12 @@ const config: CapacitorConfig = {
     androidScheme: 'https',  // required for Android cleartext policy
   },
 
+  // Adding a custom user-agent string forces Capacitor to inject its bridge
+  // (window.Capacitor + plugins) into the remote page on Android. Without this,
+  // Android + server.url + a service worker leaves window.Capacitor undefined,
+  // so native plugins like PushNotifications never appear. iOS is unaffected.
+  appendUserAgent: 'AlignWithEnjyApp',
+
   ios: {
     contentInset: 'automatic',
     backgroundColor: '#F5F1E6',
