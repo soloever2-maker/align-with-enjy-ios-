@@ -22,7 +22,10 @@ workflows:
       xcode: latest
     scripts:
       - name: Install npm dependencies
-        script: npm install
+        script: |
+          rm -f package-lock.json
+          rm -rf node_modules
+          npm install
       - name: Capacitor sync
         script: npx cap sync ios
       - name: Initialize keychain
@@ -42,8 +45,13 @@ workflows:
           [ -z "$LATEST" ] && LATEST=0
           BUILD_NUMBER=$((LATEST + 1))
           echo "Latest TestFlight build: $LATEST → New build number: $BUILD_NUMBER"
+          # Bump the build number (CFBundleVersion).
           sed -i '' "s/CURRENT_PROJECT_VERSION = [0-9]*;/CURRENT_PROJECT_VERSION = $BUILD_NUMBER;/g" ios/App/App.xcodeproj/project.pbxproj
-          grep "CURRENT_PROJECT_VERSION" ios/App/App.xcodeproj/project.pbxproj
+          # Bump the marketing version (CFBundleShortVersionString) to 1.0.<build>
+          # so every upload has a strictly-higher version than the last approved one.
+          sed -i '' "s/MARKETING_VERSION = [^;]*;/MARKETING_VERSION = 1.0.$BUILD_NUMBER;/g" ios/App/App.xcodeproj/project.pbxproj
+          echo "Versions set:"
+          grep -E "CURRENT_PROJECT_VERSION|MARKETING_VERSION" ios/App/App.xcodeproj/project.pbxproj | head -4
       - name: Build IPA
         script: |
           xcode-project build-ipa \
@@ -75,7 +83,10 @@ workflows:
       java: 21
     scripts:
       - name: Install npm dependencies
-        script: npm install
+        script: |
+          rm -f package-lock.json
+          rm -rf node_modules
+          npm install
 
       - name: Add Android platform (first time only)
         script: |
