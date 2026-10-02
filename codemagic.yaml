@@ -162,6 +162,20 @@ workflows:
           echo "versionCode → $VC"
           sed -i '' "s/versionCode .*/versionCode $VC/" android/app/build.gradle
 
+      - name: Enable R8 code shrinking + obfuscation (Play DEX optimization)
+        script: |
+          # The Capacitor template ships the release build with R8 off.
+          # Google Play requires optimized DEX code, so turn it on here.
+          # Capacitor's own consumer ProGuard rules keep the plugin classes.
+          APP=android/app/build.gradle
+          sed -i '' 's/minifyEnabled false/minifyEnabled true/' "$APP"
+          if grep -q "minifyEnabled true" "$APP"; then
+            echo "R8 enabled for release build"
+          else
+            echo "ERROR: could not enable R8 in $APP"
+            exit 1
+          fi
+
       - name: Build Android AAB (release)
         script: |
           cd android
