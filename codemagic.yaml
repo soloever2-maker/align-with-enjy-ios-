@@ -100,6 +100,17 @@ workflows:
       - name: Capacitor sync
         script: npx cap sync android
 
+      - name: Generate Android launcher icon
+        script: |
+          # android/ is generated fresh on every build, so without this step
+          # the app ships with the default Capacitor icon.
+          # Sources: assets/icon-only.png, icon-foreground.png, icon-background.png
+          if [ ! -f assets/icon-only.png ]; then
+            echo "ERROR: assets/icon-only.png not found"
+            exit 1
+          fi
+          npx --yes @capacitor/assets@3 generate --android --assetPath assets
+
       - name: Add biometric permission to AndroidManifest
         script: |
           MANIFEST=android/app/src/main/AndroidManifest.xml
